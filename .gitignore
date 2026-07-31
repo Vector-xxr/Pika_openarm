@@ -4,6 +4,8 @@
 /data/**
 !/data/.gitkeep
 
+/build/
+/log/
 /install/
 /source/install/
 
@@ -11,6 +13,7 @@
 /utils/all_telop/data_see/**
 !/utils/all_telop/data_see/.gitkeep
 !/utils/all_telop/data_see/*.py
+!/utils/all_telop/data_see/make_videos.py
 
 # Build / cache artifacts
 **/__pycache__/
