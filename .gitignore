@@ -1,2 +1,13 @@
 .vscode
 
+# Keep empty data/ in repo; ignore all episode contents.
+/data/**
+!/data/.gitkeep
+
+/install/
+/source/install/
+
+# Keep data_see tools + empty dir; ignore generated preview videos/episodes.
+/utils/all_telop/data_see/**
+!/utils/all_telop/data_see/.gitkeep
+!/utils/all_telop/data_see/*.py
