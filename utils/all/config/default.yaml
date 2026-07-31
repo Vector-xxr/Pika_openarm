@@ -1,0 +1,44 @@
+general:
+  base_data_dir: "~/pika_ros/data"
+  episode: "auto"
+  duration_seconds: 10
+  warmup_frames: 30
+  fps_target: 90  #控制采样帧数为fps_target*duration_seconds
+
+realsense:
+  serial: "230322274428"   # 仅插 gripper：230322274428；sensor 为 230322274914
+  color:
+    width: 640
+    height: 480
+    fps: 90  #只支持90/60/30/15/5 Hz，（默认fourcc: "YUYV“格式）
+  depth:
+    width: 640
+    height: 480
+    fps: 90  #只支持90/60/30/15/5 Hz
+
+fisheye:
+  device: "/dev/video60" # gripper：video60  ；sensor：video50
+  width: 640
+  height: 480
+  fps: 90     #"YUYV"格式最高30fps,MJPG格式最高120fps
+  fourcc: "MJPG"  #"MJPG" 或 "YUYV"
+
+
+saver:
+  color_format: "png"          # "png" 或 "jpg"
+  depth_format: "png"          # 必须"png" 
+  fisheye_format: "png"        # "png" 或 "jpg"
+  color_quality: 90            # JPEG 质量，仅当格式为 jpg 时有效
+  depth_quality: 100           # 对于 PNG 可忽略，但保留
+  fisheye_quality: 90
+
+gripper:
+  enabled: true
+  sensor_port: "/dev/ttyUSB50"   # 读 AS5047 角度
+  gripper_port: "/dev/ttyUSB60"  # 控制 + 读 motorstatus 回执
+  baud_rate: 460800              # 波特率固定
+  effort_mA: 1000                # 电流上限可选
+  velocity: 20.0                 # 速度上限可选
+  mit_mode: true                 #默认22，位置控制；23为位置-速度控制模式，无效
+  ctrl_rate: 100                  # 控制下发频率 Hz
+  capture_rate: 100               # 角度入队/写 CSV 频率 Hz；0=不限频

@@ -1,0 +1,177 @@
+# all_telop merged config — camera/gripper (utils/all) + OpenArm teleop (utils/sensor)
+#
+# Run:
+#   ros2 launch pika_locator pika_single_locator_only.launch.py
+#   ./all_telop [episode]
+#
+# Keys: p = start capture+gripper+teleop; q = pause/hold; Ctrl+C = exit
+#
+
+general:
+  base_data_dir: "~/pika_ros/data"
+  episode: "auto"
+  # 0 = unlimited frames (p/q control + Ctrl+C end). >0 = soft max duration*fps
+  duration_seconds: 0
+  warmup_frames: 30
+  fps_target: 90
+
+realsense:
+  serial: "230322274428"   # gripper-side RealSense; sensor side: 230322274914
+  color:
+    width: 640
+    height: 480
+    fps: 90
+  depth:
+    width: 640
+    height: 480
+    fps: 90
+
+fisheye:
+  device: "/dev/video60"
+  width: 640
+  height: 480
+  fps: 90
+  fourcc: "MJPG"
+
+saver:
+  color_format: "png"
+  depth_format: "png"
+  fisheye_format: "png"
+  color_quality: 90
+  depth_quality: 100
+  fisheye_quality: 90
+
+gripper:
+  enabled: true
+  sensor_port: "/dev/ttyUSB50"
+  gripper_port: "/dev/ttyUSB60"
+  baud_rate: 460800
+  effort_mA: 1000
+  velocity: 20.0
+  mit_mode: true
+  ctrl_rate: 100
+  capture_rate: 100
+
+# -----------------------------------------------------------------------------
+# OpenArm teleop (from utils/sensor pika_openarm.yaml)
+# -----------------------------------------------------------------------------
+Runtime:
+  # 手臂选择：目前只实现 "right"。"left"/"both" 会在启动时报错（未实现）。
+  arm: right
+
+  # IK 求解器名称，对应 create_ik_solver() 工厂：目前只有 "dls"（阻尼最小二乘）。
+  ik: dls
+
+  # 关节空间插值器名称，对应 create_joint_interpolator() 工厂：目前只有 "linear"。
+  interpolator: linear
+
+  # Follower 臂的 CAN 接口名。
+  can_interface: can0
+
+  # URDF 路径，相对 sensor 根目录（即本文件所在 config/ 的上一级）解析；也可写绝对路径。
+  urdf: assets/urdf/v1.urdf
+
+  # true: 跳过夹爪电机初始化（例如夹爪已被 Pika 串口夹爪替代），
+  # 对应环境变量 OPENARM_SKIP_GRIPPER=1。
+  skip_gripper: true
+
+  # 是否把「期望 TCP 绝对位姿」录制为 T0 相对轨迹 CSV（见 tcp_relative_csv_writer）。
+  record_tcp_csv: true
+  record_tcp_csv_path: "sensor/vive.csv"  # overridden at runtime to {episode}/sensor/vive.csv
+
+  # 位姿话题；留空则按 arm 自动推断（right/left -> /pika_pose）。
+  # pose_topic: "/pika_pose"
+
+# -----------------------------------------------------------------------------
+# PikaCartesian — Pika 位姿 -> OpenArm 期望位姿 的映射参数（CartesianMapper::load_config）
+# 以及 Admin/Follower 线程频率。
+# -----------------------------------------------------------------------------
+PikaCartesian:
+  # Admin 线程频率：drain 位姿队列 -> mapper -> IK -> JointSegmentCache。
+  ik_update_hz: 120
+
+  # Follower 线程频率：JointInterpolator -> RobotSystemState -> Control::unilateral_step()。
+  follower_hz: 1000
+
+  # --- 位置映射 ---
+  position_scale: 0.8
+  # 当前稳定定位下静止位置噪声峰值约 0.00103m；取 0.003m 保留约 3 倍裕量，
+  # 同时缩小 play deadband 的固定位置滞后。
+  position_deadzone: 0.003
+  # 120Hz 下 5mm/帧 = 0.6m/s；限制 locator 飞点成为 IK 目标阶跃。
+  max_position_step_per_frame: 0.005
+  position_min: [0.1, -0.35, 0.1]
+  position_max: [0.7, 0.35, 0.7]
+
+  # --- 旋转映射 ---
+  rotation_scale: 0.8
+  # 有状态姿态死区（rad）：静止噪声不进入 IK；超过死区后连续跟随，不产生阶跃。
+  # 当前稳定定位下静止噪声峰值约 0.0025rad；取 0.02rad 保留充足裕量，
+  # 同时缩小 play deadband 的固定角度滞后，改善旋转响应。
+  rotation_deadzone: 0.02
+  # 120Hz 下 0.0125rad/帧 = 1.5rad/s，与 DLS 姿态速度上限一致。
+  max_rotation_step_per_frame: 0.0125
+  # "vive": 用 roll/pitch/yaw（本 topic 由四元数换算得到）; "imu": 直接用四元数。
+  rotation_source: "vive"
+  base_offset_rpy: [0.0, 0.0, 0.0]
+  tool_offset_rpy: [0.0, 0.0, 0.0]
+
+  # --- 夹爪映射 ---
+  # 注意：/pika_pose (PoseStamped) 不带夹爪角度，grip_angle 恒为 0（=闭合端点）。
+  # 若后续切换到携带夹爪数据的话题/消息类型，以下映射即可生效。
+  pika_gripper_max: 1.67
+  openarm_gripper_min: -0.02
+  openarm_gripper_max: -1.16
+  gripper_deadzone: 0.02
+  gripper_max_step_per_frame: 0.0
+
+  # --- 遗留字段：仅供 CartesianMapperConfig 兼容/未来 legacy IK 路径使用 ---
+  ik_max_iter: 50
+  ik_eps: 0.0001
+  ik_lambda: 0.1
+  ik_alpha: 0.8
+  ik_use_nullspace: 0
+  ik_nullspace_gain: 0.01
+  position_weight: 0.5
+  rotation_weight: 0.5
+  ik_max_joint_step: 0.20
+  ik_joint_weights: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
+# -----------------------------------------------------------------------------
+# CartesianController — DLS IK（IkSolver "dls" / DlsIk）运行参数
+# -----------------------------------------------------------------------------
+CartesianController:
+  # full: 6-DOF 完整跟踪; hold: 只跟位置，姿态锁定在激活时刻; free: 只跟位置，不跟姿态。
+  # 注意：当前 DlsIk 实现始终做位置+姿态跟踪，orientation_mode 目前仅记录进配置，
+  # 尚未接入 DlsIk::step()（见 README「风险与后续改进」）。
+  orientation_mode: full
+
+  kp_pos: 2.0
+  kp_ori: 2.0
+  max_linear_speed_mps: 0.60
+  max_angular_speed_radps: 1.5
+  lambda: 0.08
+  max_joint_velocity_radps: 1.5
+  soft_limit_margin_frac: 0.12
+  max_tracking_error_rad: 0.25
+  use_nullspace: 0
+  nullspace_gain: 0.2
+  debug_log: 0
+  max_gripper_speed: 2.0
+
+# -----------------------------------------------------------------------------
+# FollowerArmParam — Control::SetParameter() 的 MIT 增益与摩擦补偿参数
+# (Kp/Kd 用于 MIT 位置-速度环；Fc/k/Fv/Fo 用于 tanh 摩擦补偿模型)
+#
+#   τ_fric(ω) = Fo + Fv·ω + Fc·tanh(k·ω)
+#
+# 8 个增益对应 关节1-7(臂) + 关节8(CAN 夹爪)。
+# skip_gripper=true 时 hand_motor_num=0，只用到前 7 个值，第 8 个可留空占位。
+# -----------------------------------------------------------------------------
+FollowerArmParam:
+  Kp: [120.0, 120.0, 120.0, 120.0, 25.0, 25.0, 25.0, 25.0]
+  Kd: [3.0, 3.0, 3.0, 3.0, 0.5, 0.5, 0.5, 0.5]
+  Fc: [0.306, 0.306, 0.40, 0.166, 0.050, 0.093, 0.172, 0.0512]
+  k: [28.417, 28.417, 29.065, 130.038, 151.771, 242.287, 7.888, 4.000]
+  Fv: [0.063, 0.0630, 0.604, 0.813, 0.029, 0.072, 0.084, 0.084]
+  Fo: [0.088, 0.088, 0.008, -0.058, 0.005, 0.009, -0.059, -0.050]

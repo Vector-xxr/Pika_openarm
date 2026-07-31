@@ -18,5 +18,5 @@
 # Build / cache artifacts
 **/__pycache__/
 *.pyc
-/utils/sensor/build/
+/utils/**/build/
 /utils/sensor/debug.md

@@ -1,0 +1,34 @@
+general:
+  base_data_dir: "~/pika_ros/data"
+  episode: "auto"
+  duration_seconds: 10
+  warmup_frames: 30
+  fps_target: 90  #控制采样帧数为fps_target*duration_seconds
+
+realsense:
+  serial: "230322274914"   # "230322274914"是sensor，"230322274428" 是gripper
+  color:
+    width: 640
+    height: 480
+    fps: 90  #只支持90/60/30/15/5 Hz，（默认fourcc: "YUYV“格式）
+  depth:
+    width: 640
+    height: 480
+    fps: 90  #只支持90/60/30/15/5 Hz
+
+fisheye:
+  device: "/dev/video14" # sensor 采集节点；勿用 /dev/video50(现指向 video15 metadata，打不开)
+                         # gripper 采集节点一般为 /dev/video6（或 /dev/video60 若链接正确）
+  width: 640
+  height: 480
+  fps: 90     #"YUYV"格式最高30fps,MJPG格式最高120fps
+  fourcc: "MJPG"  #"MJPG" 或 "YUYV"
+
+
+saver:
+  color_format: "png"          # "png" 或 "jpg"
+  depth_format: "png"          # 必须"png" 
+  fisheye_format: "png"        # "png" 或 "jpg"
+  color_quality: 90            # JPEG 质量，仅当格式为 jpg 时有效
+  depth_quality: 100           # 对于 PNG 可忽略，但保留
+  fisheye_quality: 90
