@@ -11,3 +11,9 @@
 /utils/all_telop/data_see/**
 !/utils/all_telop/data_see/.gitkeep
 !/utils/all_telop/data_see/*.py
+
+# Build / cache artifacts
+**/__pycache__/
+*.pyc
+/utils/sensor/build/
+/utils/sensor/debug.md
