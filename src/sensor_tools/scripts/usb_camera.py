@@ -85,6 +85,8 @@ class RosOperator(Node):
                 if ret:
                     self.publish_camera_color(frame)
                 rate.sleep()
+                # else:
+                #     time.sleep(0.01)# 读失败时才短睡，避免空转把 CPU 打满
         except Exception as e:
             self.get_logger().error(f"Camera error: {e}")
         finally:
