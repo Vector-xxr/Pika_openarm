@@ -12,7 +12,9 @@
 #include <csignal>
 #include <cstdlib>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <mutex>
 #include <string>
 #include <termios.h>
 #include <thread>
@@ -62,10 +64,44 @@ private:
     bool active_ = false;
 };
 
+// Accumulates wall time while session is active (p..q segments).
+struct SessionActiveTimer {
+    void on_start() {
+        std::lock_guard<std::mutex> lock(mu_);
+        if (in_session_) return;
+        in_session_ = true;
+        segment_start_ = std::chrono::steady_clock::now();
+    }
+
+    void on_stop() {
+        std::lock_guard<std::mutex> lock(mu_);
+        stop_unlocked();
+    }
+
+    double finalize() {
+        std::lock_guard<std::mutex> lock(mu_);
+        stop_unlocked();
+        return active_seconds_;
+    }
+
+private:
+    void stop_unlocked() {
+        if (!in_session_) return;
+        const auto now = std::chrono::steady_clock::now();
+        active_seconds_ += std::chrono::duration<double>(now - segment_start_).count();
+        in_session_ = false;
+    }
+
+    std::mutex mu_;
+    bool in_session_ = false;
+    double active_seconds_ = 0.0;
+    std::chrono::steady_clock::time_point segment_start_{};
+};
+
 // Sets session_active immediately (camera + gripper gate) and start/stop edges for teleop Admin.
 void keyboard_loop(std::atomic<bool>* cameras_ready, std::atomic<bool>* session_active,
                    std::atomic<bool>* session_start, std::atomic<bool>* session_stop,
-                   PoseHealthMonitor* health) {
+                   PoseHealthMonitor* health, SessionActiveTimer* active_timer) {
     TerminalRawMode terminal;
     if (!terminal.enable()) {
         std::cerr << "[all_telop] WARN: stdin is not a TTY; p/q unavailable." << std::endl;
@@ -89,6 +125,7 @@ void keyboard_loop(std::atomic<bool>* cameras_ready, std::atomic<bool>* session_
             expect_p = false;
             if (session_active != nullptr) session_active->store(true);
             if (session_start != nullptr) session_start->store(true);
+            if (active_timer != nullptr) active_timer->on_start();
             if (health != nullptr && !health->dynamic_enabled()) {
                 health->enable_dynamic(true);
             }
@@ -96,11 +133,13 @@ void keyboard_loop(std::atomic<bool>* cameras_ready, std::atomic<bool>* session_
                       << std::endl;
         } else if ((key == 'q' || key == 'Q') && !expect_p) {
             expect_p = true;
+            if (active_timer != nullptr) active_timer->on_stop();
             if (session_active != nullptr) session_active->store(false);
             if (session_stop != nullptr) session_stop->store(true);
             std::cout << "[all_telop] SESSION STOP — 暂停采集/夹爪跟随，臂保持姿态" << std::endl;
         }
     }
+    if (active_timer != nullptr) active_timer->on_stop();
 }
 
 }  // namespace
@@ -197,8 +236,10 @@ int main(int argc, char** argv) {
         std::cout << "[all_telop] Episode dir: " << recorder.baseDir() << std::endl;
 
         std::atomic<bool> cameras_ready_flag{true};
+        SessionActiveTimer active_timer;
         std::thread keyboard_thread(keyboard_loop, &cameras_ready_flag, &session_active,
-                                    &session_start, &session_stop, teleop.poseHealth());
+                                    &session_start, &session_stop, teleop.poseHealth(),
+                                    &active_timer);
 
         while (keep_running) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -208,9 +249,12 @@ int main(int argc, char** argv) {
         session_stop.store(true);
 
         if (keyboard_thread.joinable()) keyboard_thread.join();
+        const double active_seconds = active_timer.finalize();
         teleop.stop();
         recorder_thread.join();
-        recorder.printStatistics();
+        std::cout << "[all_telop] session 激活累计时长: " << std::fixed << std::setprecision(5)
+                  << active_seconds << " s（不含 q→p 暂停）" << std::endl;
+        recorder.printStatistics(active_seconds);
 
         return EXIT_SUCCESS;
     } catch (const std::exception& e) {

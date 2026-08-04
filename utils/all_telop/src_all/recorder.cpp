@@ -400,22 +400,22 @@ void Recorder::waitForAll() {
     if (gripper_saver_.joinable()) gripper_saver_.join();
 }
 
-void Recorder::printStatistics() {
+void Recorder::printStatistics(double active_seconds) {
     {
         std::lock_guard<std::mutex> lock(ts_mutex_color_);
-        ::print_statistics(color_timestamps_, "彩色");
+        ::print_statistics(color_timestamps_, "彩色", active_seconds);
     }
     {
         std::lock_guard<std::mutex> lock(ts_mutex_depth_);
-        ::print_statistics(depth_timestamps_, "深度");
+        ::print_statistics(depth_timestamps_, "深度", active_seconds);
     }
     {
         std::lock_guard<std::mutex> lock(ts_mutex_fisheye_);
-        ::print_statistics(fisheye_timestamps_, "鱼眼");
+        ::print_statistics(fisheye_timestamps_, "鱼眼", active_seconds);
     }
     if (gripper_) {
         std::lock_guard<std::mutex> lock(gripper_->timestampsMutex());
-        ::print_statistics(gripper_->timestamps(), "gripper");
+        ::print_statistics(gripper_->timestamps(), "gripper", active_seconds);
     }
 
     std::cout << "\n所有数据已保存至: " << base_dir_ << std::endl;

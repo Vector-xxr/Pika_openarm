@@ -36,7 +36,8 @@ public:
     std::string sensorDir() const { return base_dir_ + "/sensor"; }
     std::string viveCsvPath() const { return sensorDir() + "/vive.csv"; }
 
-    void printStatistics();
+    // active_seconds: wall time spent with session_active (p..q), excluding pauses.
+    void printStatistics(double active_seconds = 0.0);
     ~Recorder();
 
 private:
