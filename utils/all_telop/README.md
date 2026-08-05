@@ -2,6 +2,9 @@
 
 合并 `utils/all`（RealSense/鱼眼/夹爪）与 `utils/sensor`（Pika 到 OpenArm 遥操）为**单一进程** `all_telop`。
 
+**运行步骤（绑定 / CAN / 校准 / 启停 / 排查）见 [SOP.md](SOP.md)。**  
+设备绑定细节见 [`scripts/DEVICE_BINDING_REPORT.md`](../../scripts/DEVICE_BINDING_REPORT.md)。
+
 ## 按键
 
 - `p`：相机开始/继续写盘、夹爪跟随、机械臂遥操并 rezero（仅相机预热完成后有效）
@@ -107,8 +110,6 @@ flowchart LR
 
 ## 数据目录
 
-输出路径：
-
 ```
 ~/pika_ros/data/{episode}/
   color/
@@ -121,62 +122,13 @@ flowchart LR
   sensor/vive.csv
 ```
 
-`vive.csv` 语义与 `utils/sensor` 一致：记录期望 TCP（机械臂基座系）相对首次锁定 T0 的相对轨迹；`q`/`p` 不重置 T0。
+`vive.csv` 语义与 `utils/sensor` 一致：期望 TCP（基座系）相对首次锁定 T0 的相对轨迹；`q`/`p` 不重置 T0。
 
-## 依赖 / 前置
+## 依赖
 
 - ROS2 Humble（`rclcpp`、`geometry_msgs`）、librealsense2、OpenCV、yaml-cpp、Boost.System、Eigen、orocos_kdl、kdl_parser、urdfdom
-- CAN-FD `can0` 已 `up`（与原 sensor 相同）
-- USB 角色必须为：
-  - `/dev/ttyUSB50 -> ttyUSB1`（sensor：读取 AS5047）
-  - `/dev/ttyUSB60 -> ttyUSB0`（gripper：控制 + motorstatus）
-- 两个链接必须指向不同设备。sensor 口应包含 `AS5047.rad`，gripper 口应包含 `motor` / `motorstatus`
-
-## 基站校准
-
-静态检测不通过、或定位抖动过大时，先单独做基站校准（需占用 tracker，请先停掉 locator 节点）：
-
-```
-cd ~/pika_ros/install/pika_locator/lib
-./survive-cli
-```
-
-强制重新校准：
-
-```
-cd ~/pika_ros/install/pika_locator/lib
-./survive-cli --force-calibrate
-```
-
-校准完成后退出 `survive-cli`，再启动 locator 节点。
-
-## 开启定位节点
-
-终端 1 先启动 `pika_locator`（发布 `/pika_pose`）：
-
-```
-source /opt/ros/humble/setup.bash
-source ~/pika_ros/install/setup.bash
-ros2 launch pika_locator pika_single_locator_only.launch.py
-```
-
-## 编译与运行
-
-```
-source /opt/ros/humble/setup.bash
-cd ~/pika_ros/utils/all_telop
-chmod +x build.sh && ./build.sh
-```
-
-终端 2 运行 `all_telop`（locator 需已在运行）：
-
-```
-source /opt/ros/humble/setup.bash
-source ~/pika_ros/install/setup.bash
-cd ~/pika_ros/utils/all_telop/build
-./all_telop [episode]
-# 或 ./all_telop --config ../config/default.yaml
-```
+- OpenArm CAN 夹爪跳过：`Runtime.skip_gripper: true`（或 `OPENARM_SKIP_GRIPPER=1`）；夹爪跟随走串口 Pika
+- USB / CAN / 启动命令见 [SOP.md](SOP.md)
 
 ## 配置
 
@@ -186,20 +138,5 @@ cd ~/pika_ros/utils/all_telop/build
 - `Runtime` / `PikaCartesian` / `CartesianController` / `FollowerArmParam` — 来自 sensor
 
 `general.duration_seconds: 0` 表示帧数无上限（由 p/q 与 Ctrl+C 控制）；`>0` 时为软上限 `duration*fps`。
-
-## 故障排查
-
-- `angle.csv` 只有表头：先确认 `ttyUSB50` 读到的是 `AS5047.rad`，并确认已按 `p`
-- 有角度但夹爪不使能、LED 不亮，回执持续为 `Status=0x21`：完全退出占用串口的程序，关闭 gripper 控制器电源并拔掉其 USB，等待约 5 秒后重新上电、插入，再运行
-- 可用独立工具隔离相机和遥操：
-
-```
-cd ~/pika_ros/utils/gripper/build
-./read_gripper_angle /dev/ttyUSB50 /dev/ttyUSB60 \
-  --effort 1000 --velocity 20 --rate 100 --mit --verbose
-```
-
-- 若独立工具也持续显示 `Status=0x21 DIS`，问题位于 gripper 控制器状态、供电或串口发送链路，而不是 all_telop 的 `p`/`q` 门控
-- RealSense 序列号 `230322274428` 未枚举时，相机 barrier 会中止，夹爪子系统也不会启动
 
 原 `utils/all` 与 `utils/sensor` 目录保留，可继续独立使用。
