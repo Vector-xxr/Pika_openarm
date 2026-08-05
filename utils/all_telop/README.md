@@ -111,7 +111,7 @@ flowchart LR
 ## 数据目录
 
 ```
-~/pika_ros/data/{episode}/
+~/pika_ros/utils/all_telop/data/{task_name}/{episode}/
   color/
   depth/
   fisheye/

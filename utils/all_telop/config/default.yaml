@@ -8,7 +8,10 @@
 #
 
 general:
-  base_data_dir: "~/pika_ros/data"
+  # 数据根目录；实际路径为 {base_data_dir}/{task_name}/{episode}/
+  base_data_dir: "~/pika_ros/utils/all_telop/data"
+  # 任务名；episode 建在该任务目录下 → data/{task_name}/{episode}/
+  task_name: "test"
   episode: "auto"
   # 0 = unlimited frames (p/q control + Ctrl+C end). >0 = soft max duration*fps
   duration_seconds: 0

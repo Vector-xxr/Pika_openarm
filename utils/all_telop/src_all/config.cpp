@@ -8,6 +8,7 @@ Config loadConfig(const std::string& filename) {
 
     // General
     cfg.general.base_data_dir = node["general"]["base_data_dir"].as<std::string>();
+    cfg.general.task_name = node["general"]["task_name"].as<std::string>("");
     cfg.general.episode = node["general"]["episode"].as<std::string>();
     cfg.general.duration_seconds = node["general"]["duration_seconds"].as<int>();
     cfg.general.warmup_frames = node["general"]["warmup_frames"].as<int>();

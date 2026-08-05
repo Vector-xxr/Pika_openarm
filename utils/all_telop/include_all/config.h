@@ -45,6 +45,7 @@ struct GripperParams {
 
 struct GeneralParams {
     std::string base_data_dir;
+    std::string task_name;  // data/{task_name}/{episode}/
     std::string episode;
     int duration_seconds;
     int warmup_frames;

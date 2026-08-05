@@ -9,6 +9,10 @@
 /install/
 /source/install/
 
+# Keep empty all_telop/data/ in repo; ignore recorded episodes/tasks.
+/utils/all_telop/data/**
+!/utils/all_telop/data/.gitkeep
+
 # Keep data_see tools + empty dir; ignore generated preview videos/episodes.
 /utils/all_telop/data_see/**
 !/utils/all_telop/data_see/.gitkeep

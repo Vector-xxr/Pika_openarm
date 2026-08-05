@@ -21,15 +21,24 @@ Recorder::Recorder(const Config& cfg) : cfg_(cfg) {
 }
 
 bool Recorder::initialize() {
+    if (cfg_.general.task_name.empty()) {
+        std::cerr << "ERROR: general.task_name 为空，请在 config/default.yaml 中填写任务名"
+                  << std::endl;
+        return false;
+    }
+
+    const std::string task_dir =
+        cfg_.general.base_data_dir + "/" + cfg_.general.task_name;
+
     episode_name_ = cfg_.general.episode;
     if (episode_name_ == "auto") {
-        episode_name_ = get_next_episode(cfg_.general.base_data_dir);
+        episode_name_ = get_next_episode(task_dir);
         std::cout << "自动生成 episode: " << episode_name_ << std::endl;
     } else {
         std::cout << "使用指定 episode: " << episode_name_ << std::endl;
     }
 
-    base_dir_ = cfg_.general.base_data_dir + "/" + episode_name_;
+    base_dir_ = task_dir + "/" + episode_name_;
     color_dir_ = base_dir_ + "/color";
     depth_dir_ = base_dir_ + "/depth";
     fisheye_dir_ = base_dir_ + "/fisheye";
@@ -39,6 +48,7 @@ bool Recorder::initialize() {
 
     if (!createDirectories()) return false;
 
+    std::cout << "任务名: " << cfg_.general.task_name << std::endl;
     std::cout << "保存根目录: " << base_dir_ << std::endl;
     std::cout << "CSV 目录: " << csv_dir_ << std::endl;
     std::cout << "Sensor 目录: " << sensor_dir_ << std::endl;

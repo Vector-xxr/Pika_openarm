@@ -115,7 +115,7 @@ cd ~/pika_ros/utils/all_telop/build
 
 注意：`q` → 再 `p` 间隔须 **>200 ms**（帧率统计会丢掉 >0.2s 的间隙；过短会污染统计）。详见仓库根目录 [`Capture_SOP.md`](../../Capture_SOP.md)。
 
-数据输出：`~/pika_ros/data/{episode}/`（含 `color/`、`depth/`、`fisheye/`、`gripper/angle.csv`、`sensor/vive.csv`）。
+数据输出：`~/pika_ros/utils/all_telop/data/{task_name}/{episode}/`（含 `color/`、`depth/`、`fisheye/`、`gripper/angle.csv`、`sensor/vive.csv`）。默认 `task_name` 为 `test`，可在 `config/default.yaml` 修改。
 
 ---
 
