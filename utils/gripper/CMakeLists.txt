@@ -22,7 +22,6 @@ if(NOT nlohmann_json_FOUND AND NOT NLOHMANN_JSON_FOUND)
         json
         URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
         URL_HASH SHA256=d6c65aca6b1ed68e7a184f80ff21ecab1d6ba11c2b7fe5cf83b100ed61f76c2
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
     FetchContent_MakeAvailable(json)
 endif()

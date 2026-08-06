@@ -2,16 +2,16 @@
 set -euo pipefail
 
 sudo tee /etc/udev/rules.d/sensor_serial.rules >/dev/null <<'EOF'
-ACTION=="add", KERNELS=="1-2.4:1.0", SUBSYSTEMS=="usb", MODE:="0777", SYMLINK+="ttyUSB50"
+ACTION=="add", KERNELS=="1-1.4:1.0", SUBSYSTEMS=="usb", MODE:="0777", SYMLINK+="ttyUSB50"
 EOF
 sudo tee /etc/udev/rules.d/gripper_serial.rules >/dev/null <<'EOF'
-ACTION=="add", KERNELS=="1-1.4:1.0", SUBSYSTEMS=="usb", MODE:="0777", SYMLINK+="ttyUSB60"
+ACTION=="add", KERNELS=="1-2.4:1.0", SUBSYSTEMS=="usb", MODE:="0777", SYMLINK+="ttyUSB60"
 EOF
 sudo tee /etc/udev/rules.d/sensor_fisheye.rules >/dev/null <<'EOF'
-ACTION=="add", KERNEL=="video*", ATTR{index}=="0", KERNELS=="1-2.3:1.0", SUBSYSTEMS=="usb", MODE:="0777", SYMLINK+="video50"
+ACTION=="add", KERNEL=="video*", ATTR{index}=="0", KERNELS=="1-1.3:1.0", SUBSYSTEMS=="usb", MODE:="0777", SYMLINK+="video50"
 EOF
 sudo tee /etc/udev/rules.d/gripper_fisheye.rules >/dev/null <<'EOF'
-ACTION=="add", KERNEL=="video*", ATTR{index}=="0", KERNELS=="1-1.3:1.0", SUBSYSTEMS=="usb", MODE:="0777", SYMLINK+="video60"
+ACTION=="add", KERNEL=="video*", ATTR{index}=="0", KERNELS=="1-2.3:1.0", SUBSYSTEMS=="usb", MODE:="0777", SYMLINK+="video60"
 EOF
 
 sudo udevadm control --reload-rules
@@ -52,10 +52,10 @@ resolve_tty_on_port() {
   return 1
 }
 
-t1=$(resolve_tty_on_port "1-2.4:1.0" || true)
-t2=$(resolve_tty_on_port "1-1.4:1.0" || true)
-v1=$(resolve_capture_on_port "1-2.3:1.0" || true)
-v2=$(resolve_capture_on_port "1-1.3:1.0" || true)
+t1=$(resolve_tty_on_port "1-1.4:1.0" || true)
+t2=$(resolve_tty_on_port "1-2.4:1.0" || true)
+v1=$(resolve_capture_on_port "1-1.3:1.0" || true)
+v2=$(resolve_capture_on_port "1-2.3:1.0" || true)
 [[ -n "${t1:-}" ]] && sudo ln -sfn "$t1" /dev/ttyUSB50
 [[ -n "${t2:-}" ]] && sudo ln -sfn "$t2" /dev/ttyUSB60
 [[ -n "${v1:-}" ]] && sudo ln -sfn "$v1" /dev/video50

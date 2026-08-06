@@ -60,10 +60,10 @@ sudo apt install librealsense2-dev libopencv-dev libyaml-cpp-dev \
 ```bash
 chmod +x build.sh
 ./build.sh
-./build/data_recorder [episode_name]
+./build/all_recorder [episode_name]
 ```
 
-编译产物：`build/data_recorder`。
+编译产物：`build/all_recorder`。
 
 ---
 

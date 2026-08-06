@@ -1,5 +1,5 @@
 #!/bin/bash
-# data_recorder 一键编译脚本
+# all_recorder 一键编译脚本
 
 set -e  # 出错即停止
 
@@ -22,8 +22,8 @@ echo "Building..."
 make -j$(nproc)
 
 echo ""
-echo "Build successful! Executable located at: $SCRIPT_DIR/build/data_recorder"
+echo "Build successful! Executable located at: $SCRIPT_DIR/build/all_recorder"
 echo ""
 echo "Usage:"
-echo "  $SCRIPT_DIR/build/data_recorder                # 自动生成 episode"
-echo "  $SCRIPT_DIR/build/data_recorder my_episode    # 指定 episode 名称"
+echo "  $SCRIPT_DIR/build/all_recorder                # 自动生成 episode"
+echo "  $SCRIPT_DIR/build/all_recorder my_episode    # 指定 episode 名称"

@@ -61,7 +61,7 @@ chmod +x build.sh
 ./build.sh
 ```
 
-编译产物位于 `build/data_recorder`。
+编译产物位于 `build/camera_recorder`。
 
 ### 手动编译
 
@@ -74,7 +74,7 @@ make -j$(nproc)
 ### 运行
 
 ```bash
-./build/data_recorder [episode_name]
+./build/camera_recorder [episode_name]
 ```
 
 - `episode_name` 可选，默认 `auto`（自动生成 `001`, `002` ...）
@@ -261,15 +261,15 @@ cd "$SCRIPT_DIR"
 mkdir -p build && cd build
 cmake ..
 make -j$(nproc)
-echo "Build successful! Executable: build/data_recorder"
-echo "Run with: ./data_recorder [episode_name]"
+echo "Build successful! Executable: build/camera_recorder"
+echo "Run with: ./camera_recorder [episode_name]"
 ```
 
 ### 使用方法
 
 1. `chmod +x build.sh && ./build.sh`
 2. 按需修改 `config/default.yaml`
-3. `./build/data_recorder` 开始采集
+3. `./build/camera_recorder` 开始采集
 4. 需要时用 `python3 vis_depth.py <depth.png>` 查看深度
 
 ---

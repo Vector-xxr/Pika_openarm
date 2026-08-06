@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(data_recorder)
+project(all_recorder)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -21,14 +21,13 @@ if(NOT nlohmann_json_FOUND AND NOT NLOHMANN_JSON_FOUND)
     json
     URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
     URL_HASH SHA256=d6c65aca6b1ed68e7a184f80ff21ecab1d6ba11c2b7fe5cf83b100ed61f76c2
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
   )
   FetchContent_MakeAvailable(json)
 endif()
 
 include_directories(include)
 
-add_executable(data_recorder
+add_executable(all_recorder
     src/main.cpp
     src/config.cpp
     src/realsense_camera.cpp
@@ -43,7 +42,7 @@ add_executable(data_recorder
     src/gripper_subsystem.cpp
 )
 
-target_link_libraries(data_recorder
+target_link_libraries(all_recorder
     realsense2::realsense2
     ${OpenCV_LIBS}
     yaml-cpp
@@ -52,12 +51,12 @@ target_link_libraries(data_recorder
 )
 
 if(nlohmann_json_FOUND)
-  target_link_libraries(data_recorder nlohmann_json::nlohmann_json)
+  target_link_libraries(all_recorder nlohmann_json::nlohmann_json)
 elseif(NLOHMANN_JSON_FOUND)
-  target_include_directories(data_recorder PRIVATE ${NLOHMANN_JSON_INCLUDE_DIRS})
-  target_link_libraries(data_recorder ${NLOHMANN_JSON_LIBRARIES})
+  target_include_directories(all_recorder PRIVATE ${NLOHMANN_JSON_INCLUDE_DIRS})
+  target_link_libraries(all_recorder ${NLOHMANN_JSON_LIBRARIES})
 else()
-  target_link_libraries(data_recorder nlohmann_json::nlohmann_json)
+  target_link_libraries(all_recorder nlohmann_json::nlohmann_json)
 endif()
 
-install(TARGETS data_recorder DESTINATION bin)
+install(TARGETS all_recorder DESTINATION bin)
