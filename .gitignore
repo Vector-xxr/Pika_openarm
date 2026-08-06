@@ -6,7 +6,24 @@
 
 /build/
 /log/
-/install/
+# Keep most of install/ ignored; track locator runtime packages + colcon entrypoints
+# so another machine can source install/setup.bash and launch pika_locator.
+/install/**
+!/install/.colcon_install_layout
+!/install/setup.bash
+!/install/setup.sh
+!/install/setup.zsh
+!/install/setup.ps1
+!/install/local_setup.bash
+!/install/local_setup.sh
+!/install/local_setup.zsh
+!/install/local_setup.ps1
+!/install/_local_setup_util_sh.py
+!/install/_local_setup_util_ps1.py
+!/install/pika_locator/
+!/install/pika_locator/**
+!/install/libsurvive/
+!/install/libsurvive/**
 /source/install/
 
 # Keep empty all_telop/data/ in repo; ignore recorded episodes/tasks.
